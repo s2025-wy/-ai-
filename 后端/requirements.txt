@@ -9,3 +9,6 @@ alembic
 python-dotenv
 httpx
 neo4j
+langchain
+langchain_community
+dashscope
