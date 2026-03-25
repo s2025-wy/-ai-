@@ -120,6 +120,28 @@
           </div>
         </div>
         
+        <div class="form-group">
+          <label>验证码</label>
+          <div class="input-wrapper captcha-wrapper">
+            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <input 
+              v-model="loginForm.captcha" 
+              type="text"
+              placeholder="请输入验证码"
+              required
+              maxlength="4"
+            />
+            <div class="captcha-image" @click="refreshCaptcha">
+              <img v-if="captchaUrl" :src="captchaUrl" alt="验证码" @click="refreshCaptcha" />
+              <span v-else>加载中...</span>
+            </div>
+          </div>
+        </div>
+        
         <div class="form-options">
           <label class="checkbox-label">
             <input type="checkbox" v-model="loginForm.remember" />
@@ -283,9 +305,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { userApi } from '@/api/user'
+import axios from 'axios'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -295,11 +319,36 @@ const isLoading = ref(false)
 const isLoginMode = ref(true)
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
+const captchaUrl = ref<string>('')
+const captchaId = ref<string>('')
 
 const loginForm = reactive({
   username: '',
   password: '',
+  captcha: '',
   remember: false
+})
+
+const refreshCaptcha = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/auth/captcha', {
+      responseType: 'blob'
+    })
+    console.log('验证码响应:', response)
+    const blob = new Blob([response.data], { type: 'image/png' })
+    captchaUrl.value = URL.createObjectURL(blob)
+    console.log('响应头:', response.headers)
+    captchaId.value = response.headers['x-captcha-id'] || response.headers['X-Captcha-Id'] || ''
+    console.log('验证码ID:', captchaId.value)
+  } catch (error) {
+    console.error('获取验证码失败:', error)
+  }
+}
+
+onMounted(() => {
+  if (isLoginMode.value) {
+    refreshCaptcha()
+  }
 })
 
 const registerForm = reactive({
@@ -330,29 +379,54 @@ const showNotification = (message: string, type: 'success' | 'error' = 'success'
 const handleLogin = async () => {
   if (!loginFormRef.value) return
   
+  // 检查验证码是否已加载
+  if (!captchaId.value) {
+    showNotification('验证码未加载，请刷新验证码', 'error')
+    refreshCaptcha()
+    return
+  }
+  
+  if (!loginForm.captcha) {
+    showNotification('请输入验证码', 'error')
+    return
+  }
+  
+  console.log('登录数据:', {
+    username: loginForm.username,
+    password: '***',
+    captcha: loginForm.captcha,
+    captchaId: captchaId.value
+  })
+  
   try {
     isLoading.value = true
     
-    const response = await userStore.login(loginForm.username, loginForm.password, loginForm.remember)
+    await userStore.login(
+      loginForm.username, 
+      loginForm.password, 
+      loginForm.captcha,
+      captchaId.value,
+      loginForm.remember
+    )
     
-    if (response.success) {
-      showNotification('登录成功！')
-      // 延迟跳转，让用户看到通知
-      setTimeout(() => {
-        // 根据用户角色跳转到不同页面
-        const userInfo = userStore.user
-        if (userInfo && userInfo.role === 'admin') {
-          router.push('/admin')
-        } else {
-          router.push('/')
-        }
-      }, 1000)
-    } else {
-      showNotification(response.message || '登录失败', 'error')
-    }
-  } catch (error) {
+    showNotification('登录成功！')
+    // 延迟跳转，让用户看到通知
+    setTimeout(() => {
+      // 根据用户角色跳转到不同页面
+      const userInfo = userStore.user
+      if (userInfo && userInfo.role === 'admin') {
+        router.push('/admin')
+      } else {
+        router.push('/')
+      }
+    }, 1000)
+  } catch (error: any) {
     console.error('登录失败:', error)
-    showNotification('登录失败，请重试', 'error')
+    const errorMsg = error.response?.data?.detail || error.response?.data?.message || '登录失败，请重试'
+    showNotification(errorMsg, 'error')
+    // 登录失败时刷新验证码
+    refreshCaptcha()
+    loginForm.captcha = ''
   } finally {
     isLoading.value = false
   }
@@ -398,6 +472,9 @@ const toggleMode = () => {
   isLoginMode.value = !isLoginMode.value
   showPassword.value = false
   showConfirmPassword.value = false
+  if (isLoginMode.value) {
+    refreshCaptcha()
+  }
 }
 
 // 粒子样式生成函数
@@ -870,6 +947,44 @@ const getParticleStyle = (n: number) => {
 
 .toggle-password:hover {
   color: #64748b;
+}
+
+.captcha-wrapper {
+  gap: 12px;
+}
+
+.captcha-wrapper input {
+  flex: 1;
+  padding-right: 140px;
+}
+
+.captcha-image {
+  position: absolute;
+  right: 14px;
+  width: 120px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid #e2e8f0;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.captcha-image:hover {
+  border-color: #1a237e;
+  box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1);
+}
+
+.captcha-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .form-options {

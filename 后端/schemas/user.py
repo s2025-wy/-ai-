@@ -46,6 +46,8 @@ class UserResponse(UserBase):
 class LoginRequest(BaseModel):
     username: str
     password: str
+    captcha: str
+    captchaId: str
 
 class LoginResponse(BaseModel):
     token: str

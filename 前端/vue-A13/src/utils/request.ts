@@ -44,27 +44,33 @@ request.interceptors.response.use(
   (error) => {
     // 处理错误响应
     if (error.response) {
-      const { status, data } = error.response
+      const { status, data, config } = error.response
+      const url = config?.url || ''
 
-      switch (status) {
-        case 401:
-          ElMessage.error('登录已过期，请重新登录')
-          // 清除 token 并跳转到登录页
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
-          window.location.href = '/login'
-          break
-        case 403:
-          ElMessage.error('没有权限执行此操作')
-          break
-        case 404:
-          ElMessage.error('请求的资源不存在')
-          break
-        case 500:
-          ElMessage.error('服务器内部错误')
-          break
-        default:
-          ElMessage.error(data?.message || '请求失败')
+      // 对于登录请求，不做统一处理，让调用方自己处理具体错误
+      const isLoginRequest = url.includes('/auth/login')
+
+      if (!isLoginRequest) {
+        switch (status) {
+          case 401:
+            ElMessage.error('登录已过期，请重新登录')
+            // 清除 token 并跳转到登录页
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            window.location.href = '/login'
+            break
+          case 403:
+            ElMessage.error('没有权限执行此操作')
+            break
+          case 404:
+            ElMessage.error('请求的资源不存在')
+            break
+          case 500:
+            ElMessage.error('服务器内部错误')
+            break
+          default:
+            ElMessage.error(data?.message || '请求失败')
+        }
       }
     } else {
       ElMessage.error('网络错误，请检查后端服务是否启动')

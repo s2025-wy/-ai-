@@ -30,37 +30,31 @@ export const useUserStore = defineStore('user', () => {
   const userRole = computed(() => user.value?.role || 'guest')
 
   // Actions
-  async function login(username: string, password: string, remember: boolean = false) {
+  async function login(username: string, password: string, captcha: string, captchaId: string, remember: boolean = false) {
     try {
       isLoading.value = true
       error.value = null
 
-      // 尝试调用后端登录接口
-      try {
-        const response = await userApi.login(username, password)
-        const { token: accessToken, user: userData } = response.data
+      const response = await userApi.login(username, password, captcha, captchaId)
+      const { token: accessToken, user: userData } = response.data
 
-        // 存储token和用户信息
-        token.value = accessToken
-        user.value = userData
+      // 存储token和用户信息
+      token.value = accessToken
+      user.value = userData
 
-        // 保存到localStorage
-        localStorage.setItem('token', accessToken)
-        if (remember) {
-          localStorage.setItem('user', JSON.stringify(userData))
-        } else {
-          sessionStorage.setItem('user', JSON.stringify(userData))
-        }
-
-        return { success: true, message: '登录成功' }
-      } catch (apiError) {
-        // 后端接口不可用时，不再使用本地演示数据
-        console.error('登录失败:', apiError)
-        throw apiError
+      // 保存到localStorage
+      localStorage.setItem('token', accessToken)
+      if (remember) {
+        localStorage.setItem('user', JSON.stringify(userData))
+      } else {
+        sessionStorage.setItem('user', JSON.stringify(userData))
       }
+
+      return { success: true, message: '登录成功' }
     } catch (err: any) {
-      error.value = err.response?.data?.message || '登录失败'
-      return { success: false, message: error.value }
+      console.error('登录失败:', err)
+      error.value = err.response?.data?.detail || err.response?.data?.message || '登录失败'
+      throw err
     } finally {
       isLoading.value = false
     }

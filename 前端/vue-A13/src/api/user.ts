@@ -2,9 +2,17 @@ import request from '@/utils/request'
 
 // 用户相关API
 export const userApi = {
+  // 获取验证码
+  getCaptcha: () => {
+    return request.get('/auth/captcha', {
+      responseType: 'blob',
+      transformResponse: [(data) => data]
+    })
+  },
+
   // 登录
-  login: (username: string, password: string) => {
-    return request.post('/auth/login', { username, password })
+  login: (username: string, password: string, captcha: string, captchaId: string) => {
+    return request.post('/auth/login', { username, password, captcha, captchaId })
   },
 
   // 注册
