@@ -1,11 +1,14 @@
 
 .container.data-v-71ef44db {
-    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
     background: #f5f7fa;
 }
 .search-section.data-v-71ef44db {
     padding: 30rpx;
     background: white;
+    flex-shrink: 0;
 }
 .search-bar.data-v-71ef44db {
     display: flex;
@@ -23,10 +26,31 @@
     flex: 1;
     font-size: 28rpx;
 }
+.search-button.data-v-71ef44db {
+    margin-left: 20rpx;
+    padding: 16rpx 32rpx;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 28rpx;
+    border-radius: 12rpx;
+}
+.clear-button.data-v-71ef44db {
+    width: 48rpx;
+    height: 48rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e2e8f0;
+    color: #64748b;
+    font-size: 32rpx;
+    border-radius: 50%;
+    margin-left: 16rpx;
+}
 .filter-section.data-v-71ef44db {
     background: white;
     padding: 20rpx 0;
     border-bottom: 1rpx solid #f0f0f0;
+    flex-shrink: 0;
 }
 .filter-scroll.data-v-71ef44db {
     white-space: nowrap;
@@ -45,6 +69,10 @@
 .filter-item.active.data-v-71ef44db {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
+}
+.job-scroll.data-v-71ef44db {
+    flex: 1;
+    height: 0;
 }
 .job-list.data-v-71ef44db {
     padding: 30rpx;
@@ -104,7 +132,7 @@
     padding: 8rpx 16rpx;
     border-radius: 8rpx;
 }
-.empty-state.data-v-71ef44db {
+.empty-state.data-v-71ef44db, .loading-state.data-v-71ef44db, .no-more-state.data-v-71ef44db {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -123,4 +151,8 @@
 .empty-desc.data-v-71ef44db {
     font-size: 24rpx;
     color: #ccc;
+}
+.loading-state text.data-v-71ef44db, .no-more-state text.data-v-71ef44db {
+    font-size: 28rpx;
+    color: #999;
 }

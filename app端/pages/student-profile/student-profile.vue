@@ -89,22 +89,14 @@ export default {
     
     methods: {
         uploadResume() {
-            uni.chooseMessageFile({
-                count: 1,
-                type: 'file',
-                success: (res) => {
-                    uni.showToast({
-                        title: '简历上传成功',
-                        icon: 'success'
-                    })
-                }
+            uni.navigateTo({
+                url: '/pages/upload-resume/upload-resume'
             })
         },
         
         editProfile() {
-            uni.showToast({
-                title: '编辑功能开发中',
-                icon: 'none'
+            uni.navigateTo({
+                url: '/pages/edit-profile/edit-profile'
             })
         }
     }

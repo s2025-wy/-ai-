@@ -7,26 +7,26 @@ export const useUserStore = {
         isLoading: false,
         error: null
     },
-    
+
     get isLoggedIn() {
         return !!this.state.token
     },
-    
+
     get userRole() {
         return this.state.user?.role || 'guest'
     },
-    
+
     async login(username, password, captcha, captchaId, remember = false) {
         try {
             this.state.isLoading = true
             this.state.error = null
-            
+
             const response = await userApi.login(username, password, captcha, captchaId)
-            const { token: accessToken, user: userData } = response
-            
+            const { token: accessToken, user: userData } = response.data
+
             this.state.token = accessToken
             this.state.user = userData
-            
+
             uni.setStorageSync('token', accessToken)
             if (remember) {
                 uni.setStorageSync('user', JSON.stringify(userData))
@@ -36,7 +36,7 @@ export const useUserStore = {
                     data: JSON.stringify(userData)
                 })
             }
-            
+
             return { success: true, message: '登录成功' }
         } catch (err) {
             console.error('登录失败:', err)
@@ -46,12 +46,12 @@ export const useUserStore = {
             this.state.isLoading = false
         }
     },
-    
+
     async register(userData) {
         try {
             this.state.isLoading = true
             this.state.error = null
-            
+
             await userApi.register(userData)
             return { success: true, message: '注册成功' }
         } catch (err) {
@@ -62,7 +62,7 @@ export const useUserStore = {
             this.state.isLoading = false
         }
     },
-    
+
     logout() {
         try {
             userApi.logout().catch(err => {
@@ -75,18 +75,20 @@ export const useUserStore = {
             this.state.user = null
             uni.removeStorageSync('token')
             uni.removeStorageSync('user')
-            
+
             uni.reLaunch({
                 url: '/pages/login/login'
             })
         }
     },
-    
+
     async fetchCurrentUser() {
         try {
-            const response = await userApi.getCurrentUser()
-            this.state.user = response
-            uni.setStorageSync('user', JSON.stringify(response))
+            const response = await userApi.getUserInfo()
+            if (response && response.data) {
+                this.state.user = response.data
+                uni.setStorageSync('user', JSON.stringify(response.data))
+            }
         } catch (err) {
             console.error('获取用户信息失败:', err)
         }

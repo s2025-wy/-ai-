@@ -18,7 +18,7 @@ router = APIRouter(
 @router.get("/", response_model=List[JobResponse])
 def get_job_list(
     skip: int = Query(0, ge=0),
-    limit: int = Query(10, ge=1, le=10000),
+    limit: int = Query(1000, ge=1, le=10000),
     keyword: Optional[str] = None,
     industry: Optional[str] = None,
     location: Optional[str] = None,
@@ -28,7 +28,7 @@ def get_job_list(
     query = db.query(Job)
     
     if keyword:
-        query = query.filter(Job.title.contains(keyword) | Job.description.contains(keyword))
+        query = query.filter(Job.title.contains(keyword))
     if industry:
         query = query.filter(Job.industry == industry)
     if location:
@@ -41,14 +41,12 @@ def get_job_list(
 def search_jobs(
     keyword: str = Query(..., description="搜索关键词"),
     skip: int = Query(0, ge=0),
-    limit: int = Query(10, ge=1, le=100),
+    limit: int = Query(1000, ge=1, le=10000),
     db: Session = Depends(get_db)
 ):
-    """搜索岗位"""
+    """搜索岗位（仅搜索岗位名称）"""
     jobs = db.query(Job).filter(
-        Job.title.contains(keyword) | 
-        Job.description.contains(keyword) |
-        Job.requirements.contains(keyword)
+        Job.title.contains(keyword)
     ).offset(skip).limit(limit).all()
     return jobs
 

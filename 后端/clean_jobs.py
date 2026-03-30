@@ -150,6 +150,45 @@ def parse_salary(salary_str):
     return salary_str.strip()
 
 
+def split_description(text):
+    if not text or not isinstance(text, str):
+        return "", ""
+    
+    text = text.strip()
+    
+    patterns = [
+        r'岗位职责[：:]\s*(.*?)(?=任职要求|任职资格|职位要求|$)',
+        r'岗位要求[：:]\s*(.*?)(?=任职要求|任职资格|职位要求|$)',
+    ]
+    
+    req_patterns = [
+        r'任职要求[：:]\s*(.*)',
+        r'任职资格[：:]\s*(.*)',
+        r'职位要求[：:]\s*(.*)',
+        r'岗位要求[：:]\s*(.*)',
+    ]
+    
+    description = ""
+    requirements = ""
+    
+    for pattern in patterns:
+        match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+        if match and match.group(1).strip():
+            description = match.group(1).strip()
+            break
+    
+    for pattern in req_patterns:
+        match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+        if match and match.group(1).strip():
+            requirements = match.group(1).strip()
+            break
+    
+    if not description and not requirements:
+        return text, ""
+    
+    return description, requirements
+
+
 def clean_data(row):
     location = row.get("地址", "")
     if pd.notna(location) and location:
@@ -157,16 +196,39 @@ def clean_data(row):
     else:
         location = "未知地点"
     
+    job_detail = row.get("岗位详情", "").strip() if pd.notna(row.get("岗位详情")) else ""
+    description, requirements = split_description(job_detail)
+    
+    title = row.get("岗位名称", "").strip() if pd.notna(row.get("岗位名称")) else ""
+    
+    tags = []
+    if '前端' in title or '前端' in job_detail:
+        tags.append('前端')
+    if 'Java' in title or 'Java' in job_detail:
+        tags.append('Java')
+    if 'Python' in title or 'Python' in job_detail:
+        tags.append('Python')
+    if '测试' in title:
+        tags.append('测试')
+    if '运维' in title:
+        tags.append('运维')
+    if '产品' in title:
+        tags.append('产品')
+    if '算法' in title:
+        tags.append('算法')
+    if 'C++' in title or 'C/C++' in title:
+        tags.append('C++')
+    
     return {
-        "title": row.get("岗位名称", "").strip() if pd.notna(row.get("岗位名称")) else "",
+        "title": title,
         "company": row.get("公司名称", "").strip() if pd.notna(row.get("公司名称")) else "",
         "salary": parse_salary(row.get("薪资范围")),
         "location": location,
         "experience": row.get("工作经验", "不限").strip() if pd.notna(row.get("工作经验")) else "不限",
         "education": row.get("学历要求", "不限").strip() if pd.notna(row.get("学历要求")) else "不限",
-        "description": row.get("岗位详情", "").strip() if pd.notna(row.get("岗位详情")) else "",
-        "requirements": row.get("岗位详情", "").strip() if pd.notna(row.get("岗位详情")) else "",
-        "tags": "",
+        "description": description,
+        "requirements": requirements,
+        "tags": ",".join(tags) if tags else "",
         "industry": row.get("所属行业", "其他").strip() if pd.notna(row.get("所属行业")) else "其他",
         "type": "",
         "publish_date": row.get("更新日期", "").strip() if pd.notna(row.get("更新日期")) else ""

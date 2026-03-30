@@ -24,15 +24,18 @@ const _sfc_main = {
       });
     },
     viewMyApplications() {
-      common_vendor.index.showToast({
-        title: "功能开发中",
-        icon: "none"
+      common_vendor.index.navigateTo({
+        url: "/pages/my-applications/my-applications"
       });
     },
     viewMyFavorites() {
-      common_vendor.index.showToast({
-        title: "功能开发中",
-        icon: "none"
+      common_vendor.index.navigateTo({
+        url: "/pages/my-favorites/my-favorites"
+      });
+    },
+    editPersonalInfo() {
+      common_vendor.index.navigateTo({
+        url: "/pages/edit-profile/edit-profile"
       });
     },
     editSettings() {
@@ -75,10 +78,11 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     d: common_vendor.o((...args) => $options.viewMyProfile && $options.viewMyProfile(...args)),
     e: common_vendor.o((...args) => $options.viewMyApplications && $options.viewMyApplications(...args)),
     f: common_vendor.o((...args) => $options.viewMyFavorites && $options.viewMyFavorites(...args)),
-    g: common_vendor.o((...args) => $options.editSettings && $options.editSettings(...args)),
-    h: common_vendor.o((...args) => $options.viewAbout && $options.viewAbout(...args)),
-    i: common_vendor.o((...args) => $options.contactSupport && $options.contactSupport(...args)),
-    j: common_vendor.o((...args) => $options.handleLogout && $options.handleLogout(...args))
+    g: common_vendor.o((...args) => $options.editPersonalInfo && $options.editPersonalInfo(...args)),
+    h: common_vendor.o((...args) => $options.editSettings && $options.editSettings(...args)),
+    i: common_vendor.o((...args) => $options.viewAbout && $options.viewAbout(...args)),
+    j: common_vendor.o((...args) => $options.contactSupport && $options.contactSupport(...args)),
+    k: common_vendor.o((...args) => $options.handleLogout && $options.handleLogout(...args))
   };
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-5df2242c"]]);

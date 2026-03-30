@@ -31,6 +31,11 @@
         </view>
         
         <view class="menu-section">
+            <view class="menu-item" @click="editPersonalInfo">
+                <text class="menu-icon">✏️</text>
+                <text class="menu-text">编辑个人信息</text>
+                <text class="menu-arrow">›</text>
+            </view>
             <view class="menu-item" @click="editSettings">
                 <text class="menu-icon">⚙️</text>
                 <text class="menu-text">设置</text>
@@ -83,16 +88,20 @@ export default {
         },
         
         viewMyApplications() {
-            uni.showToast({
-                title: '功能开发中',
-                icon: 'none'
+            uni.navigateTo({
+                url: '/pages/my-applications/my-applications'
             })
         },
         
         viewMyFavorites() {
-            uni.showToast({
-                title: '功能开发中',
-                icon: 'none'
+            uni.navigateTo({
+                url: '/pages/my-favorites/my-favorites'
+            })
+        },
+        
+        editPersonalInfo() {
+            uni.navigateTo({
+                url: '/pages/edit-profile/edit-profile'
             })
         },
         

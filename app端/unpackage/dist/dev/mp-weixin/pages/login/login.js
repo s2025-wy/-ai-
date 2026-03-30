@@ -1,5 +1,7 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
+const config_index = require("../../config/index.js");
+const stores_user = require("../../stores/user.js");
 const _sfc_main = {
   data() {
     return {
@@ -28,22 +30,32 @@ const _sfc_main = {
   methods: {
     async refreshCaptcha() {
       try {
-        const res = await common_vendor.index.request({
-          url: "http://10.216.82.205:8000/auth/captcha",
+        common_vendor.index.__f__("log", "at pages/login/login.vue:201", "请求验证码，URL:", config_index.appConfig.baseUrl + "/auth/captcha");
+        common_vendor.index.request({
+          url: config_index.appConfig.baseUrl + "/auth/captcha",
           method: "GET",
-          responseType: "arraybuffer"
+          responseType: "arraybuffer",
+          success: (res) => {
+            var _a, _b;
+            common_vendor.index.__f__("log", "at pages/login/login.vue:207", "验证码响应:", res);
+            common_vendor.index.__f__("log", "at pages/login/login.vue:208", "响应头:", res.header);
+            if (res.statusCode === 200) {
+              const base64 = common_vendor.index.arrayBufferToBase64(res.data);
+              this.captchaUrl = "data:image/png;base64," + base64;
+              this.captchaId = ((_a = res.header) == null ? void 0 : _a["x-captcha-id"]) || ((_b = res.header) == null ? void 0 : _b["X-Captcha-Id"]) || "";
+              common_vendor.index.__f__("log", "at pages/login/login.vue:213", "验证码ID:", this.captchaId);
+            }
+          },
+          fail: (e) => {
+            common_vendor.index.__f__("error", "at pages/login/login.vue:217", "验证码错误", e);
+          }
         });
-        if (res.statusCode === 200) {
-          const base64 = common_vendor.index.arrayBufferToBase64(res.data);
-          this.captchaUrl = "data:image/png;base64," + base64;
-          this.captchaId = res.header["x-captcha-id"] || "";
-        }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/login/login.vue:208", "验证码错误", e);
+        common_vendor.index.__f__("error", "at pages/login/login.vue:221", "验证码错误", e);
       }
     },
     async handleLogin() {
-      var _a;
+      var _a, _b;
       if (!this.loginForm.username || !this.loginForm.password || !this.loginForm.captcha) {
         common_vendor.index.showToast({ title: "请完善信息", icon: "none" });
         return;
@@ -53,68 +65,52 @@ const _sfc_main = {
         return;
       }
       this.isLoading = true;
+      const loginData = {
+        username: this.loginForm.username,
+        password: this.loginForm.password,
+        captcha: this.loginForm.captcha,
+        captchaId: this.captchaId
+      };
+      common_vendor.index.__f__("log", "at pages/login/login.vue:243", "登录请求数据:", loginData);
       try {
-        const res = await common_vendor.index.request({
-          url: "http://10.216.82.205:8000/auth/login",
-          method: "POST",
-          header: {
-            "Content-Type": "application/json"
-          },
-          data: {
-            username: this.loginForm.username,
-            password: this.loginForm.password,
-            captcha: this.loginForm.captcha,
-            captchaId: this.captchaId
-          }
-        });
-        common_vendor.index.__f__("log", "at pages/login/login.vue:239", "登录返回：", res);
-        if (res.statusCode === 200 || res.data.code === 0) {
-          common_vendor.index.showToast({ title: "登录成功", icon: "success" });
-          setTimeout(() => {
-            common_vendor.index.navigateTo({ url: "/pages/index/index" });
-          }, 1e3);
-        } else {
-          common_vendor.index.showToast({
-            title: ((_a = res.data) == null ? void 0 : _a.msg) || "登录失败",
-            icon: "none"
-          });
-        }
+        await stores_user.useUserStore.login(
+          this.loginForm.username,
+          this.loginForm.password,
+          this.loginForm.captcha,
+          this.captchaId,
+          this.loginForm.remember
+        );
+        common_vendor.index.showToast({ title: "登录成功", icon: "success" });
+        setTimeout(() => {
+          common_vendor.index.switchTab({ url: "/pages/index/index" });
+        }, 1e3);
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/login/login.vue:253", err);
-        common_vendor.index.showToast({ title: "登录失败", icon: "none" });
+        common_vendor.index.__f__("error", "at pages/login/login.vue:259", "登录错误详情:", err);
+        common_vendor.index.showToast({ title: (err == null ? void 0 : err.message) || ((_a = err == null ? void 0 : err.data) == null ? void 0 : _a.detail) || ((_b = err == null ? void 0 : err.data) == null ? void 0 : _b.msg) || "登录失败", icon: "none" });
+        this.refreshCaptcha();
       } finally {
         this.isLoading = false;
       }
     },
     async handleRegister() {
+      var _a;
       if (this.registerForm.password !== this.registerForm.confirmPassword) {
         common_vendor.index.showToast({ title: "两次密码不一致", icon: "none" });
         return;
       }
       this.isLoading = true;
       try {
-        const res = await common_vendor.index.request({
-          url: "http://10.216.82.205:8000/auth/register",
-          method: "POST",
-          header: {
-            "Content-Type": "application/json"
-          },
-          data: {
-            username: this.registerForm.username,
-            email: this.registerForm.email,
-            name: this.registerForm.name,
-            password: this.registerForm.password
-          }
+        await stores_user.useUserStore.register({
+          username: this.registerForm.username,
+          email: this.registerForm.email,
+          name: this.registerForm.name,
+          password: this.registerForm.password
         });
-        if (res.statusCode === 200) {
-          common_vendor.index.showToast({ title: "注册成功" });
-          this.isLoginMode = true;
-        } else {
-          common_vendor.index.showToast({ title: "注册失败", icon: "none" });
-        }
+        common_vendor.index.showToast({ title: "注册成功" });
+        this.isLoginMode = true;
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/login/login.vue:290", err);
-        common_vendor.index.showToast({ title: "注册失败", icon: "none" });
+        common_vendor.index.__f__("error", "at pages/login/login.vue:286", err);
+        common_vendor.index.showToast({ title: ((_a = err == null ? void 0 : err.data) == null ? void 0 : _a.msg) || "注册失败", icon: "none" });
       } finally {
         this.isLoading = false;
       }

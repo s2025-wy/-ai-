@@ -26,21 +26,13 @@ const _sfc_main = {
   },
   methods: {
     uploadResume() {
-      common_vendor.index.chooseMessageFile({
-        count: 1,
-        type: "file",
-        success: (res) => {
-          common_vendor.index.showToast({
-            title: "简历上传成功",
-            icon: "success"
-          });
-        }
+      common_vendor.index.navigateTo({
+        url: "/pages/upload-resume/upload-resume"
       });
     },
     editProfile() {
-      common_vendor.index.showToast({
-        title: "编辑功能开发中",
-        icon: "none"
+      common_vendor.index.navigateTo({
+        url: "/pages/edit-profile/edit-profile"
       });
     }
   }

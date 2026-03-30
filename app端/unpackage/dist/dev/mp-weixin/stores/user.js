@@ -20,7 +20,7 @@ const useUserStore = {
       this.state.isLoading = true;
       this.state.error = null;
       const response = await api_user.userApi.login(username, password, captcha, captchaId);
-      const { token: accessToken, user: userData } = response;
+      const { token: accessToken, user: userData } = response.data;
       this.state.token = accessToken;
       this.state.user = userData;
       common_vendor.index.setStorageSync("token", accessToken);
@@ -74,11 +74,13 @@ const useUserStore = {
   },
   async fetchCurrentUser() {
     try {
-      const response = await api_user.userApi.getCurrentUser();
-      this.state.user = response;
-      common_vendor.index.setStorageSync("user", JSON.stringify(response));
+      const response = await api_user.userApi.getUserInfo();
+      if (response && response.data) {
+        this.state.user = response.data;
+        common_vendor.index.setStorageSync("user", JSON.stringify(response.data));
+      }
     } catch (err) {
-      common_vendor.index.__f__("error", "at stores/user.js:91", "获取用户信息失败:", err);
+      common_vendor.index.__f__("error", "at stores/user.js:93", "获取用户信息失败:", err);
     }
   }
 };

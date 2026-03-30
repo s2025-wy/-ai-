@@ -1,23 +1,28 @@
 import request from '@/utils/request.js'
 
 export default {
-    // 获取学生画像
-    getProfile() {
+    // 获取学生信息
+    getStudentInfo() {
         return request.get('/student/profile')
     },
-    
-    // 更新学生画像
-    updateProfile(data) {
+
+    // 更新学生信息
+    updateStudentInfo(data) {
         return request.put('/student/profile', data)
     },
-    
+
     // 上传简历
-    uploadResume(filePath) {
-        return request.upload('/student/resume', filePath)
+    uploadResume(filePath, formData) {
+        return request.upload('/student/upload-resume', filePath, formData)
     },
-    
-    // 获取能力雷达图
-    getAbilityRadar() {
-        return request.get('/student/ability-radar')
+
+    // 解析简历
+    parseResume(fileId) {
+        return request.post('/student/parse-resume', { fileId })
+    },
+
+    // 获取学生能力评估
+    getAbilityEvaluation() {
+        return request.get('/student/ability-evaluation')
     }
 }

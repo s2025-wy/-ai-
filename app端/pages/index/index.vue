@@ -23,10 +23,21 @@
                     <view class="action-icon career-icon">📊</view>
                     <text class="action-text">职业规划</text>
                 </view>
-                <view class="action-item" @click="navigateTo('/pages/user-center/user-center')">
-                    <view class="action-icon user-icon">⚙️</view>
-                    <text class="action-text">个人中心</text>
+                <view class="action-item" @click="navigateTo('/pages/interview-prep/interview-prep')">
+                    <view class="action-icon interview-icon">💼</view>
+                    <text class="action-text">面试准备</text>
                 </view>
+            </view>
+        </view>
+        
+        <view class="ai-assistant-section">
+            <view class="ai-card" @click="openAIAssistant">
+                <view class="ai-icon">🤖</view>
+                <view class="ai-content">
+                    <text class="ai-title">AI职业助手</text>
+                    <text class="ai-desc">有任何职业问题，随时问我！</text>
+                </view>
+                <text class="ai-arrow">›</text>
             </view>
         </view>
         
@@ -99,6 +110,11 @@ export default {
                         url: url
                     })
                 }
+            })
+        },
+        openAIAssistant() {
+            uni.switchTab({
+                url: '/pages/ai-assistant/ai-assistant'
             })
         }
     }
@@ -204,10 +220,69 @@ export default {
     background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 }
 
+.interview-icon {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
 .action-text {
     font-size: 24rpx;
     color: #333;
     font-weight: 500;
+}
+
+.ai-assistant-section {
+    padding: 0 30rpx;
+    margin-top: 40rpx;
+}
+
+.ai-card {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    border-radius: 24rpx;
+    padding: 40rpx 30rpx;
+    box-shadow: 0 10rpx 30rpx rgba(250, 112, 154, 0.3);
+}
+
+.ai-card:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+}
+
+.ai-icon {
+    width: 100rpx;
+    height: 100rpx;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 24rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 56rpx;
+    margin-right: 30rpx;
+}
+
+.ai-content {
+    flex: 1;
+}
+
+.ai-title {
+    font-size: 32rpx;
+    font-weight: 700;
+    color: white;
+    display: block;
+    margin-bottom: 8rpx;
+}
+
+.ai-desc {
+    font-size: 26rpx;
+    color: rgba(255, 255, 255, 0.9);
+    display: block;
+}
+
+.ai-arrow {
+    font-size: 48rpx;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 300;
 }
 
 .feature-list {

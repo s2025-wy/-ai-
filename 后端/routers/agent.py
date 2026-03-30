@@ -325,11 +325,19 @@ async def query_knowledge_graph(question: str) -> str:
 
 @router.post("/send-message")
 async def send_message(
-        user_id: str = Query(..., description="用户唯一标识"),
-        message: str = Query(..., description="用户发送的消息内容", min_length=1),
+        user_id: Optional[str] = Query(None, description="用户唯一标识"),
+        message: Optional[str] = Query(None, description="用户发送的消息内容"),
+        request_body: Optional[Dict[str, Any]] = Body(None),
         db: Session = Depends(get_db)
 ):
-    """发送消息"""
+    """发送消息（同时支持Query参数和Body参数）"""
+    if request_body:
+        user_id = request_body.get("user_id", user_id or f"user_{datetime.now().timestamp()}")
+        message = request_body.get("message", message or "")
+    else:
+        user_id = user_id or f"user_{datetime.now().timestamp()}"
+        message = message or ""
+    
     clean_message = message.strip()
     if not clean_message:
         raise HTTPException(status_code=400, detail="消息内容不能为空")

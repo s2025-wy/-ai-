@@ -166,6 +166,10 @@
 </template>
 
 <script>
+import userApi from '@/api/user.js'
+import { useUserStore } from '@/stores/user.js'
+import appConfig from '@/config/index.js'
+
 export default {
     data() {
         return {
@@ -194,16 +198,25 @@ export default {
     methods: {
         async refreshCaptcha() {
             try {
-                const res = await uni.request({
-                    url: "http://10.216.82.205:8000/auth/captcha",
+                console.log('请求验证码，URL:', appConfig.baseUrl + '/auth/captcha')
+                uni.request({
+                    url: appConfig.baseUrl + '/auth/captcha',
                     method: 'GET',
-                    responseType: 'arraybuffer'
+                    responseType: 'arraybuffer',
+                    success: (res) => {
+                        console.log('验证码响应:', res)
+                        console.log('响应头:', res.header)
+                        if (res.statusCode === 200) {
+                            const base64 = uni.arrayBufferToBase64(res.data)
+                            this.captchaUrl = 'data:image/png;base64,' + base64
+                            this.captchaId = res.header?.['x-captcha-id'] || res.header?.['X-Captcha-Id'] || ''
+                            console.log('验证码ID:', this.captchaId)
+                        }
+                    },
+                    fail: (e) => {
+                        console.error("验证码错误", e)
+                    }
                 })
-                if (res.statusCode === 200) {
-                    const base64 = uni.arrayBufferToBase64(res.data)
-                    this.captchaUrl = 'data:image/png;base64,' + base64
-                    this.captchaId = res.header['x-captcha-id'] || ''
-                }
             } catch (e) {
                 console.error("验证码错误", e)
             }
@@ -221,37 +234,31 @@ export default {
 
             this.isLoading = true
 
+            const loginData = {
+                username: this.loginForm.username,
+                password: this.loginForm.password,
+                captcha: this.loginForm.captcha,
+                captchaId: this.captchaId
+            }
+            console.log('登录请求数据:', loginData)
+
             try {
-                const res = await uni.request({
-                    url: "http://10.216.82.205:8000/auth/login",
-                    method: "POST",
-                    header: {
-                        "Content-Type": "application/json"
-                    },
-                    data: {
-                        username: this.loginForm.username,
-                        password: this.loginForm.password,
-                        captcha: this.loginForm.captcha,
-                        captchaId: this.captchaId
-                    }
-                })
-
-                console.log("登录返回：", res)
-
-                if (res.statusCode === 200 || res.data.code === 0) {
-                    uni.showToast({ title: '登录成功', icon: "success" })
-                    setTimeout(() => {
-                        uni.navigateTo({ url: "/pages/index/index" })
-                    }, 1000)
-                } else {
-                    uni.showToast({ 
-                        title: res.data?.msg || "登录失败", 
-                        icon: "none" 
-                    })
-                }
+                await useUserStore.login(
+                    this.loginForm.username,
+                    this.loginForm.password,
+                    this.loginForm.captcha,
+                    this.captchaId,
+                    this.loginForm.remember
+                )
+                
+                uni.showToast({ title: '登录成功', icon: "success" })
+                setTimeout(() => {
+                    uni.switchTab({ url: "/pages/index/index" })
+                }, 1000)
             } catch (err) {
-                console.error(err)
-                uni.showToast({ title: "登录失败", icon: "none" })
+                console.error('登录错误详情:', err)
+                uni.showToast({ title: err?.message || err?.data?.detail || err?.data?.msg || "登录失败", icon: "none" })
+                this.refreshCaptcha()
             } finally {
                 this.isLoading = false
             }
@@ -266,29 +273,18 @@ export default {
             this.isLoading = true
 
             try {
-                const res = await uni.request({
-                    url: "http://10.216.82.205:8000/auth/register",
-                    method: "POST",
-                    header: {
-                        "Content-Type": "application/json"
-                    },
-                    data: {
-                        username: this.registerForm.username,
-                        email: this.registerForm.email,
-                        name: this.registerForm.name,
-                        password: this.registerForm.password
-                    }
+                await useUserStore.register({
+                    username: this.registerForm.username,
+                    email: this.registerForm.email,
+                    name: this.registerForm.name,
+                    password: this.registerForm.password
                 })
 
-                if (res.statusCode === 200) {
-                    uni.showToast({ title: "注册成功" })
-                    this.isLoginMode = true
-                } else {
-                    uni.showToast({ title: "注册失败", icon: "none" })
-                }
+                uni.showToast({ title: "注册成功" })
+                this.isLoginMode = true
             } catch (err) {
                 console.error(err)
-                uni.showToast({ title: "注册失败", icon: "none" })
+                uni.showToast({ title: err?.data?.msg || "注册失败", icon: "none" })
             } finally {
                 this.isLoading = false
             }

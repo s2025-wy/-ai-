@@ -29,6 +29,11 @@ const _sfc_main = {
           });
         }
       });
+    },
+    openAIAssistant() {
+      common_vendor.index.switchTab({
+        url: "/pages/ai-assistant/ai-assistant"
+      });
     }
   }
 };
@@ -38,7 +43,8 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     b: common_vendor.o(($event) => $options.navigateTo("/pages/job-explore/job-explore")),
     c: common_vendor.o(($event) => $options.navigateTo("/pages/student-profile/student-profile")),
     d: common_vendor.o(($event) => $options.navigateTo("/pages/career-plan/career-plan")),
-    e: common_vendor.o(($event) => $options.navigateTo("/pages/user-center/user-center"))
+    e: common_vendor.o(($event) => $options.navigateTo("/pages/interview-prep/interview-prep")),
+    f: common_vendor.o((...args) => $options.openAIAssistant && $options.openAIAssistant(...args))
   };
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-1cf27b2a"]]);
