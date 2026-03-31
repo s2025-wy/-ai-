@@ -86,7 +86,8 @@ export default {
                 benefits: [],
                 applied: false
             },
-            isFavorite: false
+            isFavorite: false,
+            appliedJobIds: new Set()
         }
     },
     
@@ -94,6 +95,7 @@ export default {
         if (options.id) {
             this.jobId = options.id
             this.loadJobDetail()
+            this.loadApplications()
         }
     },
     
@@ -109,6 +111,25 @@ export default {
             return text.replace(/<br\s*\/?>/gi, '\n').replace(/<br>/gi, '\n').split('\n').filter(line => line.trim())
         },
         
+        async loadApplications() {
+            try {
+                const response = await jobApi.getApplications()
+                console.log('申请列表响应:', response)
+                if (response && response.data && Array.isArray(response.data)) {
+                    this.appliedJobIds = new Set(response.data.map(app => app.job_id || app.jobId))
+                    this.checkIfApplied()
+                }
+            } catch (err) {
+                console.error('获取申请列表失败:', err)
+            }
+        },
+        
+        checkIfApplied() {
+            if (this.jobId && this.appliedJobIds.has(Number(this.jobId))) {
+                this.job.applied = true
+            }
+        },
+        
         async loadJobDetail() {
             try {
                 uni.showLoading({ title: '加载中...' })
@@ -116,12 +137,14 @@ export default {
                 console.log('岗位详情响应:', response)
                 if (response && response.data) {
                     this.job = response.data
+                    this.job.applied = false
                     if (!this.job.tags) {
                         this.job.tags = []
                     }
                     if (!this.job.benefits) {
                         this.job.benefits = []
                     }
+                    this.checkIfApplied()
                 }
             } catch (err) {
                 console.error(err)
@@ -164,6 +187,7 @@ export default {
                 uni.showLoading({ title: '申请中...' })
                 await jobApi.applyJob(this.jobId)
                 this.job.applied = true
+                this.appliedJobIds.add(Number(this.jobId))
                 uni.showToast({
                     title: '申请成功',
                     icon: 'success'

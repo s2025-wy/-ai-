@@ -1691,13 +1691,15 @@ if (uni.restoreGlobal) {
           benefits: [],
           applied: false
         },
-        isFavorite: false
+        isFavorite: false,
+        appliedJobIds: /* @__PURE__ */ new Set()
       };
     },
     onLoad(options) {
       if (options.id) {
         this.jobId = options.id;
         this.loadJobDetail();
+        this.loadApplications();
       }
     },
     methods: {
@@ -1713,22 +1715,41 @@ if (uni.restoreGlobal) {
           return [];
         return text.replace(/<br\s*\/?>/gi, "\n").replace(/<br>/gi, "\n").split("\n").filter((line) => line.trim());
       },
+      async loadApplications() {
+        try {
+          const response = await jobApi.getApplications();
+          formatAppLog("log", "at pages/job-detail/job-detail.vue:117", "申请列表响应:", response);
+          if (response && response.data && Array.isArray(response.data)) {
+            this.appliedJobIds = new Set(response.data.map((app) => app.job_id || app.jobId));
+            this.checkIfApplied();
+          }
+        } catch (err) {
+          formatAppLog("error", "at pages/job-detail/job-detail.vue:123", "获取申请列表失败:", err);
+        }
+      },
+      checkIfApplied() {
+        if (this.jobId && this.appliedJobIds.has(Number(this.jobId))) {
+          this.job.applied = true;
+        }
+      },
       async loadJobDetail() {
         try {
           uni.showLoading({ title: "加载中..." });
           const response = await jobApi.getJobDetail(this.jobId);
-          formatAppLog("log", "at pages/job-detail/job-detail.vue:116", "岗位详情响应:", response);
+          formatAppLog("log", "at pages/job-detail/job-detail.vue:137", "岗位详情响应:", response);
           if (response && response.data) {
             this.job = response.data;
+            this.job.applied = false;
             if (!this.job.tags) {
               this.job.tags = [];
             }
             if (!this.job.benefits) {
               this.job.benefits = [];
             }
+            this.checkIfApplied();
           }
         } catch (err) {
-          formatAppLog("error", "at pages/job-detail/job-detail.vue:127", err);
+          formatAppLog("error", "at pages/job-detail/job-detail.vue:150", err);
           uni.showToast({
             title: "加载失败",
             icon: "none"
@@ -1749,7 +1770,7 @@ if (uni.restoreGlobal) {
             uni.showToast({ title: "收藏成功", icon: "success" });
           }
         } catch (err) {
-          formatAppLog("error", "at pages/job-detail/job-detail.vue:149", err);
+          formatAppLog("error", "at pages/job-detail/job-detail.vue:172", err);
           uni.showToast({ title: "操作失败", icon: "none" });
         }
       },
@@ -1766,12 +1787,13 @@ if (uni.restoreGlobal) {
           uni.showLoading({ title: "申请中..." });
           await jobApi.applyJob(this.jobId);
           this.job.applied = true;
+          this.appliedJobIds.add(Number(this.jobId));
           uni.showToast({
             title: "申请成功",
             icon: "success"
           });
         } catch (err) {
-          formatAppLog("error", "at pages/job-detail/job-detail.vue:172", err);
+          formatAppLog("error", "at pages/job-detail/job-detail.vue:196", err);
           uni.showToast({
             title: (err == null ? void 0 : err.message) || ((_a = err == null ? void 0 : err.data) == null ? void 0 : _a.detail) || "申请失败",
             icon: "none"
